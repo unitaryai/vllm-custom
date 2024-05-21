@@ -149,6 +149,9 @@ FROM vllm-base AS vllm-openai
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install accelerate hf_transfer modelscope
 
+COPY examples/ /vllm-workspace/examples/
+COPY quantllavatest/ /vllm-workspace/checkpoints/quantllavatest/
+
 ENV VLLM_USAGE_SOURCE production-docker-image
 
 ENTRYPOINT ["python3", "-m", "vllm.entrypoints.openai.api_server"]
