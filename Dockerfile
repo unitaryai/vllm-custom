@@ -131,7 +131,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install accelerate hf_transfer modelscope
 
 COPY examples/ /vllm-workspace/examples/
-COPY vllm-2024.05.21-12.43.14_sweep=6sicbjw_5a210ffe67d9_ckpt-1200-quantized/ /vllm-workspace/checkpoints/vllm-2024.05.21-12.43.14_sweep=6sicbjw_5a210ffe67d9_ckpt-1200-quantized/
+COPY vllm-2024.06.03-17.19.58_sweep=nubamebd_77074817cb24_ckpt-800-quantized/ /vllm-workspace/checkpoints/vllm-2024.06.03-17.19.58_sweep=nubamebd_77074817cb24_ckpt-800-quantized/
 
 ENV VLLM_USAGE_SOURCE production-docker-image
 
