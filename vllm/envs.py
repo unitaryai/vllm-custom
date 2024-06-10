@@ -105,7 +105,7 @@ environment_variables: Dict[str, Callable[[], Any]] = {
     # by incrementing the VLLM_PORT value.
     # '0' is used to make mypy happy
     'VLLM_PORT':
-    lambda: int(os.getenv('VLLM_PORT', '0'))
+        lambda: int(os.getenv('VLLM_PORT', '0').split(":")[-1])
     if 'VLLM_PORT' in os.environ else None,
 
     # If true, will load models from ModelScope instead of Hugging Face Hub.
