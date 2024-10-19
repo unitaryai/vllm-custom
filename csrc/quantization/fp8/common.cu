@@ -7,7 +7,13 @@
 #include "cuda_compat.h"
 #include "dispatch_utils.h"
 
-#include "../../reduction_utils.cuh"
+#ifndef USE_ROCM
+  #include <cub/util_type.cuh>
+  #include <cub/cub.cuh>
+#else
+  #include <hipcub/util_type.hpp>
+  #include <hipcub/hipcub.hpp>
+#endif
 
 #ifndef USE_ROCM
 using FP8_TYPE = c10::Float8_e4m3fn;
@@ -198,8 +204,10 @@ __global__ void dynamic_per_token_scaled_fp8_quant_kernel(
   int const tid = threadIdx.x;
   int const token_idx = blockIdx.x;
 
-  scalar_t const* __restrict__ token_input = &input[token_idx * hidden_size];
-  FP8_TYPE* __restrict__ token_output = &out[token_idx * hidden_size];
+  // Use int64 to avoid overflowing an int32 when calculating this offset
+  int64_t offset = static_cast<int64_t>(token_idx) * hidden_size;
+  scalar_t const* __restrict__ token_input = &input[offset];
+  FP8_TYPE* __restrict__ token_output = &out[offset];
 
   // For vectorization, token_input and token_output pointers need to be
   // aligned at 8-byte and 4-byte addresses respectively.
@@ -215,7 +223,10 @@ __global__ void dynamic_per_token_scaled_fp8_quant_kernel(
     }
   }
 
-  float const block_absmax_val_maybe = blockReduceMax(absmax_val);
+  using BlockReduce = cub::BlockReduce<float, 1024>;
+  __shared__ typename BlockReduce::TempStorage reduceStorage;
+  float const block_absmax_val_maybe =
+      BlockReduce(reduceStorage).Reduce(absmax_val, cub::Max{}, blockDim.x);
   __shared__ float token_scale;
   if (tid == 0) {
     if (scale_ub) {
